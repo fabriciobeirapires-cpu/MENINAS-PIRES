@@ -1,0 +1,904 @@
+﻿<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rotina Premiada</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(to bottom right, #e0f2fe, #bfdbfe);
+            color: #1f2937;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .container {
+            max-width: 900px;
+            margin: auto;
+            padding: 1.5rem;
+            width: 100%;
+        }
+        .card {
+            background-color: #ffffff;
+            border-radius: 1.5rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            padding: 2rem;
+        }
+        .button {
+            border-radius: 9999px;
+            font-weight: bold;
+            text-align: center;
+            transition: all 0.2s ease-in-out;
+            box-shadow: 0 4px #9ca3af;
+        }
+        .button:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px #9ca3af;
+        }
+        .profile-icon {
+            border: 4px solid white;
+            transition: transform 0.2s;
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));
+        }
+        .profile-icon:hover {
+            transform: scale(1.05);
+            filter: drop-shadow(0 8px 10px rgba(0,0,0,0.2));
+        }
+        .task-item {
+            border-radius: 1rem;
+            transition: background-color 0.2s;
+            box-shadow: inset 0 -2px rgba(0,0,0,0.05);
+        }
+        .task-item.completed {
+            background-color: #dcfce7;
+            color: #166534;
+            border-left: 6px solid #22c55e;
+        }
+        .task-item.pending_approval {
+            background-color: #fef9c3;
+            color: #854d0e;
+            border-left: 6px solid #facc15;
+        }
+        .task-item.rejected {
+            background-color: #fee2e2;
+            color: #991b1b;
+            border-left: 6px solid #ef4444;
+        }
+        .gemini-feature-btn {
+            background-image: linear-gradient(to right, #4ade80, #34d399);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 9999px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            box-shadow: 0 4px #15803d;
+        }
+        .gemini-feature-btn:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px #15803d;
+        }
+        #login-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center">
+    <div id="app" class="container">
+        <!-- Tela de Login/Seleção de Perfil -->
+        <div id="login-screen" class="flex flex-col items-center justify-center p-8 card m-4">
+            <h1 class="text-4xl font-extrabold text-blue-800 mb-6 text-center">Rotina Premiada ✨</h1>
+            <p class="text-xl text-gray-700 mb-8 text-center">Quem vai usar o aplicativo hoje?</p>
+            <div class="flex flex-wrap justify-center gap-8">
+                <div class="flex flex-col items-center cursor-pointer profile-icon rounded-full p-2" data-profile="isadora">
+                    <img src="https://placehold.co/120x120/a5b4fc/ffffff?text=Isadora" alt="Avatar Isadora" class="w-24 h-24 rounded-full mb-2">
+                    <span class="text-lg font-semibold text-gray-800">Isadora</span>
+                </div>
+                <div class="flex flex-col items-center cursor-pointer profile-icon rounded-full p-2" data-profile="sofia">
+                    <img src="https://placehold.co/120x120/60a5fa/ffffff?text=Sofia" alt="Avatar Sofia" class="w-24 h-24 rounded-full mb-2">
+                    <span class="text-lg font-semibold text-gray-800">Sofia</span>
+                </div>
+                <div class="flex flex-col items-center cursor-pointer profile-icon rounded-full p-2" data-profile="antonella">
+                    <img src="https://placehold.co/120x120/fca5a5/ffffff?text=Antonella" alt="Avatar Antonella" class="w-24 h-24 rounded-full mb-2">
+                    <span class="text-lg font-semibold text-gray-800">Antonella</span>
+                </div>
+                <div class="flex flex-col items-center cursor-pointer profile-icon rounded-full p-2" data-profile="grandma">
+                    <img src="https://placehold.co/120x120/d1d5db/ffffff?text=Vovó" alt="Avatar Vovó" class="w-24 h-24 rounded-full mb-2">
+                    <span class="text-lg font-semibold text-gray-800">Vovó</span>
+                </div>
+                <div class="flex flex-col items-center cursor-pointer profile-icon rounded-full p-2" data-profile="parent">
+                    <img src="https://placehold.co/120x120/9ca3af/ffffff?text=Pai" alt="Avatar Pai" class="w-24 h-24 rounded-full mb-2">
+                    <span class="text-lg font-semibold text-gray-800">Pai</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Formulário de Login para Pais e Avós -->
+        <div id="role-login-screen" class="hidden flex-col items-center p-8 card m-4">
+            <h2 id="login-title" class="text-3xl font-bold text-gray-800 mb-6 text-center">Login</h2>
+            <form id="login-form">
+                <input type="password" id="password-input" placeholder="Digite a senha" class="p-3 rounded-lg border-2 border-gray-300 w-full text-center">
+                <button type="submit" class="button bg-blue-500 text-white p-4 w-full mt-4">Entrar</button>
+            </form>
+        </div>
+
+        <!-- Dashboard da Filha -->
+        <div id="daughter-dashboard" class="hidden flex-col items-center p-8 card m-4">
+            <button id="logout-btn" class="absolute top-4 right-4 text-gray-600 hover:text-gray-800 transition">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
+            </button>
+            <img id="daughter-avatar" src="" alt="Avatar" class="w-32 h-32 rounded-full mb-4 border-4 border-white shadow-md">
+            <h2 class="text-3xl font-bold text-gray-800 mb-2" id="daughter-name"></h2>
+            <p class="text-xl text-green-600 font-bold mb-4">Saldo: <span id="daughter-balance">R$ 0,00</span></p>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
+                <!-- Tarefas do Dia -->
+                <div class="card p-6">
+                    <h3 class="text-2xl font-bold mb-4 flex items-center justify-between">
+                        <span>Minhas Tarefas do Dia</span>
+                        <button id="add-surprise-task-btn" class="gemini-feature-btn text-sm">
+                            ✨ Tarefa Surpresa
+                        </button>
+                    </h3>
+                    <div id="task-list" class="flex flex-col gap-3">
+                        <!-- Tarefas serão inseridas aqui via JS -->
+                    </div>
+                </div>
+
+                <!-- Resumo do Dia e Recompensas -->
+                <div class="flex flex-col gap-6">
+                    <div class="card p-6 flex-1">
+                        <h3 class="text-2xl font-bold mb-4">Resumo do Dia</h3>
+                        <div id="daily-summary-form" class="flex flex-col gap-4">
+                            <input type="text" id="summary-humor" placeholder="Humor 😃😔😡" class="p-3 rounded-lg border-2 border-gray-300">
+                            <input type="text" id="summary-aula" placeholder="Aula 📖" class="p-3 rounded-lg border-2 border-gray-300">
+                            <input type="text" id="summary-briga" placeholder="Briga ⚠️" class="p-3 rounded-lg border-2 border-gray-300">
+                            <input type="text" id="summary-vergonha" placeholder="Vergonha 😳" class="p-3 rounded-lg border-2 border-gray-300">
+                            <input type="text" id="summary-ideia" placeholder="Ideia 💡" class="p-3 rounded-lg border-2 border-gray-300">
+                            <input type="text" id="summary-palavras" placeholder="5 palavras ✍️" class="p-3 rounded-lg border-2 border-gray-300">
+                            <button id="send-summary-btn" class="button bg-blue-500 text-white p-4">Enviar Resumo</button>
+                        </div>
+                    </div>
+                    <div class="card p-6 flex-1">
+                        <h3 class="text-2xl font-bold mb-4">Minhas Recompensas</h3>
+                        <div id="rewards-list" class="flex flex-col gap-4">
+                            <!-- Recompensas serão inseridas aqui via JS -->
+                            <div class="bg-indigo-50 p-4 rounded-lg flex items-center gap-4">
+                                <span class="text-3xl">🎮</span>
+                                <div>
+                                    <h4 class="font-bold text-gray-800">Uma hora extra de videogame</h4>
+                                    <p class="text-sm text-gray-600">Pontos necessários: 50</p>
+                                </div>
+                            </div>
+                            <div class="bg-pink-50 p-4 rounded-lg flex items-center gap-4">
+                                <span class="text-3xl">🛍️</span>
+                                <div>
+                                    <h4 class="font-bold text-gray-800">Viagem ao shopping</h4>
+                                    <p class="text-sm text-gray-600">Pontos necessários: 100</p>
+                                </div>
+                            </div>
+                            <div class="bg-yellow-50 p-4 rounded-lg flex items-center gap-4">
+                                <span class="text-3xl">🍕</span>
+                                <div>
+                                    <h4 class="font-bold text-gray-800">Pizza de recompensa</h4>
+                                    <p class="text-sm text-gray-600">Pontos necessários: 30</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Input de arquivo oculto para a foto -->
+            <input type="file" id="photo-upload-input" class="hidden" accept="image/*">
+        </div>
+
+        <!-- Painel da Vovó -->
+        <div id="grandma-dashboard" class="hidden flex-col p-8 card m-4">
+            <button id="grandma-logout-btn" class="absolute top-4 right-4 text-gray-600 hover:text-gray-800 transition">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
+            </button>
+            <h2 class="text-3xl font-bold mb-6 text-gray-800 text-center">Painel da Vovó</h2>
+            <div id="pending-tasks-grandma" class="flex flex-col gap-4">
+                <!-- Tarefas pendentes para aprovação serão inseridas aqui via JS -->
+            </div>
+            <p id="no-tasks-message" class="hidden text-center text-gray-500 mt-4">Nenhuma tarefa pendente no momento. Vocês são incríveis!</p>
+        </div>
+        
+        <!-- Painel dos Pais -->
+        <div id="parent-dashboard" class="hidden flex-col p-8 card m-4">
+            <button id="parent-logout-btn" class="absolute top-4 right-4 text-gray-600 hover:text-gray-800 transition">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
+            </button>
+            <h2 class="text-3xl font-bold mb-6 text-gray-800 text-center">Painel dos Pais</h2>
+            <div id="parent-report-container" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Relatórios das filhas serão inseridos aqui via JS -->
+            </div>
+            <div id="history-container" class="w-full mt-8">
+                <h3 class="text-2xl font-bold text-gray-800 mb-4">Histórico Mensal</h3>
+                <div id="monthly-history-list" class="flex flex-col gap-4">
+                    <!-- Histórico será inserido aqui via JS -->
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal de confirmação (substitui o alert/confirm) -->
+    <div id="modal-container" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-xl shadow-2xl p-6 max-w-sm w-full text-center">
+            <h3 id="modal-title" class="text-xl font-bold mb-2 text-gray-800"></h3>
+            <p id="modal-message" class="mb-4 text-gray-600"></p>
+            <button id="modal-ok-btn" class="bg-blue-600 text-white font-bold py-2 px-6 rounded-full w-full">OK</button>
+        </div>
+    </div>
+
+    <!-- Firebase SDKs -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, updateDoc, onSnapshot, collection, query, where, getDocs, deleteDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Global variables provided by the environment
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        let app;
+        let db;
+        let auth;
+        let userId = '';
+        let currentUserRole = ''; // 'daughter', 'grandma', 'parent'
+        let currentUserId = ''; // 'isadora', 'sofia', 'antonella', etc.
+        let taskIdToApprove = null;
+        const API_KEY = "";
+        const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${API_KEY}`;
+        const PASSWORD_VOVO_PAIS = "1234"; // Senha simples para acesso. AVISO: Apenas para demonstração. Não usar em produção.
+
+
+        // Initialize Firebase
+        const initFirebase = async () => {
+            if (Object.keys(firebaseConfig).length === 0) {
+                console.error("Firebase config is empty. Please check the environment variables.");
+                return;
+            }
+            try {
+                app = initializeApp(firebaseConfig);
+                auth = getAuth(app);
+                db = getFirestore(app);
+                
+                // Sign in with the provided custom token or anonymously
+                if (initialAuthToken) {
+                    await signInWithCustomToken(auth, initialAuthToken);
+                } else {
+                    await signInAnonymously(auth);
+                }
+
+                // Listen for auth state changes
+                onAuthStateChanged(auth, async (user) => {
+                    if (user) {
+                        userId = user.uid;
+                        console.log("Usuário autenticado:", userId);
+                        // Initialize public data once
+                        await initializeDaughterData("isadora");
+                        await initializeDaughterData("sofia");
+                        await initializeDaughterData("antonella");
+                    } else {
+                        console.log("Usuário deslogado.");
+                    }
+                    showLoginScreen();
+                });
+
+            } catch (error) {
+                console.error("Erro ao inicializar Firebase:", error);
+                showModal("Erro de Inicialização", "Ocorreu um erro ao conectar com o serviço. Tente novamente mais tarde.");
+            }
+        };
+
+        // --- Variáveis de Dados ---
+        const DAUGHTERS_DATA = {
+            isadora: { name: 'Isadora', avatar: 'https://placehold.co/120x120/a5b4fc/ffffff?text=Isadora', color: 'indigo' },
+            sofia: { name: 'Sofia', avatar: 'https://placehold.co/120x120/60a5fa/ffffff?text=Sofia', color: 'blue' },
+            antonella: { name: 'Antonella', avatar: 'https://placehold.co/120x120/fca5a5/ffffff?text=Antonella', color: 'red' },
+        };
+
+        const DAUGHTER_TASKS = {
+            isadora: [
+                { id: 'isadora-1', description: 'Quarto limpo (sem chulé 🦶🚫)', value: 0.15, icon: '🏠', status: 'pending' },
+                { id: 'isadora-2', description: 'Roupas no cesto + lavar meias e calcinhas 🩳🧦', value: 0.15, icon: '🧺', status: 'pending' },
+                { id: 'isadora-3', description: 'Lavar banheiro (1 sim / 1 não) 🚿', value: 0.15, icon: '🚽', status: 'pending' },
+                { id: 'isadora-4', description: 'Sala limpa e cheirosa 🛋️', value: 0.15, icon: '🛋️', status: 'pending' },
+                { id: 'isadora-5', description: 'Recolher lixo do banheiro 🗑️', value: 0.15, icon: '🗑️', status: 'pending' },
+                { id: 'isadora-6', description: 'Abastecer garrafas 💧', value: 0.15, icon: '💧', status: 'pending' }
+            ],
+            sofia: [
+                { id: 'sofia-1', description: 'Quarto limpo + guarda-roupa arrumado 🚪', value: 0.15, icon: '🏠', status: 'pending' },
+                { id: 'sofia-2', description: 'Lavar meias e calcinhas 🧼', value: 0.15, icon: '🧼', status: 'pending' },
+                { id: 'sofia-3', description: 'Trocar lençol/fronha 1x por semana 🛏️', value: 0.15, icon: '🛏️', status: 'pending' },
+                { id: 'sofia-4', description: 'Arrumar quarto da mãe e mesa 🪑', value: 0.15, icon: '👩‍👧', status: 'pending' },
+                { id: 'sofia-5', description: 'Guardar tênis 👟', value: 0.15, icon: '👟', status: 'pending' },
+                { id: 'sofia-6', description: 'Lavar louça 1x/dia 🍽️', value: 0.15, icon: '🍽️', status: 'pending' },
+                { id: 'sofia-7', description: 'Cozinha limpa e sem nada debaixo da pia 🍳', value: 0.15, icon: '🍳', status: 'pending' },
+                { id: 'sofia-8', description: 'Limpar varanda 🌿', value: 0.15, icon: '🌿', status: 'pending' }
+            ],
+            antonella: [
+                { id: 'antonella-1', description: 'Recolher cocô dos cachorros 💩🐶', value: 0.15, icon: '💩', status: 'pending' },
+                { id: 'antonella-2', description: 'Colocar água/ração 🐾', value: 0.15, icon: '🐾', status: 'pending' },
+                { id: 'antonella-3', description: 'Limpar areia do gato 🐱', value: 0.15, icon: '🐱', status: 'pending' },
+                { id: 'antonella-4', description: 'Arrumar cama e guardar sapatos 👟', value: 0.15, icon: '🛏️', status: 'pending' },
+                { id: 'antonella-5', description: 'Lavar calcinha e meias 🛁', value: 0.15, icon: '🛁', status: 'pending' },
+                { id: 'antonella-6', description: 'Guardar brinquedos 🧸', value: 0.15, icon: '🧸', status: 'pending' }
+            ]
+        };
+
+        const COMMON_TASKS = [
+            { id: 'common-1', description: 'Banho e dentes 2x/dia 🪥', value: 0.15, icon: '🛁', status: 'pending' },
+            { id: 'common-2', description: 'Unhas limpas 💅', value: 0.15, icon: '💅', status: 'pending' },
+            { id: 'common-3', description: 'Dormir e acordar nos horários combinados ⏰', value: 0.15, icon: '⏰', status: 'pending' },
+            { id: 'common-4', description: 'Fazer a lição de casa 📚', value: 0.15, icon: '📚', status: 'pending' }
+        ];
+
+        // --- Funções de UI ---
+
+        const showScreen = (screenId) => {
+            document.querySelectorAll('#app > div').forEach(el => el.classList.add('hidden'));
+            document.getElementById(screenId).classList.remove('hidden');
+        };
+
+        const showLoginScreen = () => {
+            showScreen('login-screen');
+        };
+        
+        const showRoleLogin = (role) => {
+            document.getElementById('password-input').value = '';
+            document.getElementById('login-title').textContent = `Login ${role === 'grandma' ? 'Vovó' : 'Pai'}`;
+            showScreen('role-login-screen');
+        }
+
+        const showDaughterDashboard = (profileId) => {
+            showScreen('daughter-dashboard');
+            const data = DAUGHTERS_DATA[profileId];
+            document.getElementById('daughter-name').textContent = data.name;
+            document.getElementById('daughter-avatar').src = data.avatar;
+            currentUserId = profileId;
+            currentUserRole = 'daughter';
+            
+            // Inicia o listener de dados para a filha
+            listenForDaughterData(profileId);
+        };
+
+        const showGrandmaDashboard = () => {
+            showScreen('grandma-dashboard');
+            currentUserRole = 'grandma';
+            listenForGrandmaTasks();
+        };
+
+        const showParentDashboard = () => {
+            showScreen('parent-dashboard');
+            currentUserRole = 'parent';
+            listenForParentReport();
+        };
+
+        const showModal = (title, message) => {
+            document.getElementById('modal-title').textContent = title;
+            document.getElementById('modal-message').textContent = message;
+            document.getElementById('modal-container').classList.remove('hidden');
+        };
+
+        const hideModal = () => {
+            document.getElementById('modal-container').classList.add('hidden');
+        };
+        
+        // Função para gerar mensagem de elogio com IA
+        const generateMotivationalMessage = async (daughterName, taskDescription, button) => {
+            button.textContent = "Gerando...";
+            button.disabled = true;
+
+            const prompt = `Gere uma mensagem de elogio curta e encorajadora para uma menina chamada ${daughterName} que acabou de completar a tarefa de: "${taskDescription}". Use um tom amigável e caloroso.`;
+            const payload = {
+                contents: [{ parts: [{ text: prompt }] }],
+                systemInstruction: {
+                    parts: [{ text: "Atue como uma avó carinhosa e amorosa. A mensagem deve ser concisa e no máximo 2 frases." }]
+                }
+            };
+            
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const result = await response.json();
+                const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
+                
+                if (text) {
+                    showModal("Mensagem Sugerida", text);
+                } else {
+                    throw new Error("Resposta da IA vazia.");
+                }
+            } catch (error) {
+                console.error("Erro ao chamar a API Gemini:", error);
+                showModal("Erro", "Não foi possível gerar a mensagem. Tente novamente mais tarde.");
+            } finally {
+                button.textContent = "✨ Mensagem com IA";
+                button.disabled = false;
+            }
+        };
+
+        // Função para gerar uma tarefa surpresa com IA
+        const generateCreativeTask = async (button) => {
+            button.textContent = "Gerando...";
+            button.disabled = true;
+
+            const prompt = `Gere uma nova tarefa divertida e criativa para uma criança, relacionada a ajudar em casa ou aprender algo novo. A tarefa deve ser concisa e ter um ícone de emoji relevante. Formate a resposta como um objeto JSON com duas chaves: "description" e "icon". A descrição deve ser curta e a tarefa deve ser simples.`;
+            const payload = {
+                contents: [{ parts: [{ text: prompt }] }],
+                generationConfig: {
+                    responseMimeType: "application/json",
+                    responseSchema: {
+                        type: "OBJECT",
+                        properties: {
+                            "description": { "type": "STRING" },
+                            "icon": { "type": "STRING" }
+                        },
+                        "propertyOrdering": ["description", "icon"]
+                    }
+                }
+            };
+
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                
+                const result = await response.json();
+                const jsonText = result.candidates?.[0]?.content?.parts?.[0]?.text;
+                if (jsonText) {
+                    const newTaskData = JSON.parse(jsonText);
+                    const task = {
+                        id: `surprise-${Date.now()}`,
+                        description: newTaskData.description,
+                        icon: newTaskData.icon,
+                        value: 0.15,
+                        status: 'pending'
+                    };
+                    
+                    const daughterDocRef = getDaughterDocRef(currentUserId);
+                    const docSnap = await getDoc(daughterDocRef);
+                    if (docSnap.exists()) {
+                        const tasks = docSnap.data().tasks;
+                        tasks.push(task);
+                        await updateDoc(daughterDocRef, { tasks });
+                        
+                        showModal("Nova Tarefa Surpresa!", `Sua nova tarefa é: ${task.icon} ${task.description}`);
+                    }
+                } else {
+                    throw new Error("Resposta da IA vazia.");
+                }
+            } catch (error) {
+                console.error("Erro ao chamar a API Gemini:", error);
+                showModal("Erro", "Não foi possível gerar a tarefa. Tente novamente mais tarde.");
+            } finally {
+                button.textContent = "✨ Tarefa Surpresa";
+                button.disabled = false;
+            }
+        };
+
+
+        // --- Funções de Firebase/Firestore ---
+        
+        // Use uma coleção pública para todos os perfis das filhas
+        const getDaughterDocRef = (daughterId) => {
+            return doc(db, `artifacts/${appId}/public/data/profiles`, daughterId);
+        };
+        
+        // Use uma coleção pública para as tarefas pendentes para a vovó
+        const getTaskDocRef = (taskId) => {
+            return doc(db, `artifacts/${appId}/public/data/tasks`, taskId);
+        };
+        
+        // Inicializa os dados de cada filha em uma coleção pública
+        const initializeDaughterData = async (daughterId) => {
+            const docRef = getDaughterDocRef(daughterId);
+            const docSnap = await getDoc(docRef);
+            if (!docSnap.exists()) {
+                await setDoc(docRef, {
+                    name: DAUGHTERS_DATA[daughterId].name,
+                    balance: 0,
+                    tasks: JSON.parse(JSON.stringify([...DAUGHTER_TASKS[daughterId], ...COMMON_TASKS])),
+                    history: []
+                });
+            }
+        };
+
+        // Listener para o dashboard da filha
+        const listenForDaughterData = (profileId) => {
+            const docRef = getDaughterDocRef(profileId);
+            onSnapshot(docRef, (doc) => {
+                if (doc.exists()) {
+                    const data = doc.data();
+                    const tasks = Array.isArray(data.tasks) ? data.tasks : [];
+                    document.getElementById('daughter-balance').textContent = `R$ ${data.balance.toFixed(2).replace('.', ',')}`;
+                    renderTasks(tasks);
+                }
+            }, (error) => {
+                console.error("Erro ao ouvir dados da filha:", error);
+            });
+        };
+
+        // Listener para o painel da vovó
+        const listenForGrandmaTasks = () => {
+            const q = query(collection(db, `artifacts/${appId}/public/data/tasks`));
+            onSnapshot(q, (snapshot) => {
+                const tasks = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                renderGrandmaTasks(tasks);
+            }, (error) => {
+                console.error("Erro ao ouvir tarefas da vovó:", error);
+            });
+        };
+
+        // Listener para o painel dos pais
+        const listenForParentReport = () => {
+            const parentReportContainer = document.getElementById('parent-report-container');
+            const historyListContainer = document.getElementById('monthly-history-list');
+            
+            parentReportContainer.innerHTML = '';
+            historyListContainer.innerHTML = '';
+            
+            Object.keys(DAUGHTERS_DATA).forEach(profileId => {
+                const docRef = getDaughterDocRef(profileId);
+                onSnapshot(docRef, (doc) => {
+                    if (doc.exists()) {
+                        const data = doc.data();
+                        const tasks = Array.isArray(data.tasks) ? data.tasks : [];
+                        const history = Array.isArray(data.history) ? data.history : [];
+                        
+                        let reportCard = document.getElementById(`parent-report-${profileId}`);
+                        if (!reportCard) {
+                            reportCard = document.createElement('div');
+                            reportCard.id = `parent-report-${profileId}`;
+                            reportCard.className = 'card';
+                            parentReportContainer.appendChild(reportCard);
+                        }
+                        reportCard.innerHTML = `
+                            <h3 class="text-lg font-bold mb-2">${data.name}</h3>
+                            <p>Saldo Atual: <span class="text-green-600 font-semibold">R$ ${data.balance.toFixed(2).replace('.', ',')}</span></p>
+                            <p>Tarefas Concluídas: <span class="font-semibold">${tasks.filter(t => t.status === 'completed').length}</span></p>
+                            <p>Tarefas Pendentes: <span class="font-semibold">${tasks.filter(t => t.status === 'pending').length}</span></p>
+                        `;
+
+                        renderMonthlyHistory(history, historyListContainer);
+                    }
+                }, (error) => {
+                    console.error("Erro ao ouvir relatório do pai:", error);
+                });
+            });
+        };
+
+        const renderMonthlyHistory = (history, container) => {
+            container.innerHTML = '';
+            
+            if (history.length === 0) {
+                container.innerHTML = `<p class="text-gray-500">Nenhum histórico de atividades encontrado.</p>`;
+                return;
+            }
+
+            // Agrupa o histórico por mês e ano
+            const groupedHistory = history.reduce((acc, entry) => {
+                const date = new Date(entry.timestamp);
+                const year = date.getFullYear();
+                const month = date.toLocaleString('pt-br', { month: 'long' });
+                const key = `${month} de ${year}`;
+                if (!acc[key]) {
+                    acc[key] = [];
+                }
+                acc[key].push(entry);
+                return acc;
+            }, {});
+
+            for (const monthYear in groupedHistory) {
+                const monthSection = document.createElement('div');
+                monthSection.className = 'card p-4 mt-4';
+                monthSection.innerHTML = `
+                    <h4 class="text-lg font-bold mb-2">${monthYear}</h4>
+                    <ul class="list-disc list-inside space-y-1"></ul>
+                `;
+                const ul = monthSection.querySelector('ul');
+                groupedHistory[monthYear].forEach(entry => {
+                    const li = document.createElement('li');
+                    const date = new Date(entry.timestamp);
+                    const formattedDate = date.toLocaleDateString('pt-br');
+                    li.textContent = `${formattedDate}: ${entry.description} - ${entry.result}`;
+                    if (entry.result === 'Aprovada') {
+                        li.className = 'text-green-700';
+                    } else {
+                        li.className = 'text-red-700';
+                    }
+                    ul.appendChild(li);
+                });
+                container.appendChild(monthSection);
+            }
+        };
+
+        // --- Funções de Renderização da UI ---
+
+        const renderTasks = (tasks) => {
+            if (!Array.isArray(tasks)) {
+                console.error("Tasks is not an array, skipping rendering.", tasks);
+                return;
+            }
+            const taskList = document.getElementById('task-list');
+            taskList.innerHTML = '';
+            
+            const commonTasks = tasks.filter(t => t.id.startsWith('common'));
+            const specificTasks = tasks.filter(t => !t.id.startsWith('common') && !t.id.startsWith('surprise'));
+            const surpriseTasks = tasks.filter(t => t.id.startsWith('surprise'));
+
+            const renderTaskItem = (task) => {
+                const statusClass = task.status === 'completed' ? 'completed' : task.status === 'pending_approval' ? 'pending_approval' : task.status === 'rejected' ? 'rejected' : 'bg-gray-100';
+                const statusText = task.status === 'completed' ? 'Concluída ✅' : task.status === 'pending_approval' ? 'Aguardando Aprovação ⏳' : task.status === 'rejected' ? 'Rejeitada ❌' : 'Pendente';
+                
+                const taskElement = document.createElement('div');
+                taskElement.className = `task-item flex items-center justify-between p-4 ${statusClass}`;
+                taskElement.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <span class="text-2xl">${task.icon}</span>
+                        <p class="text-lg font-medium">${task.description}</p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-sm font-semibold">${statusText}</span>
+                        ${task.status === 'pending' ? `<button class="send-photo-btn button bg-yellow-500 text-white p-2 text-sm" data-task-id="${task.id}">Enviar Foto 📷</button>` : ''}
+                    </div>
+                `;
+                taskList.appendChild(taskElement);
+            };
+
+            // Renderiza as tarefas específicas primeiro
+            specificTasks.forEach(renderTaskItem);
+            surpriseTasks.forEach(renderTaskItem);
+            
+            // Adiciona um separador
+            if ((specificTasks.length > 0 || surpriseTasks.length > 0) && commonTasks.length > 0) {
+                const separator = document.createElement('div');
+                separator.className = 'my-4 border-t border-gray-300';
+                taskList.appendChild(separator);
+            }
+
+            // Renderiza as tarefas comuns depois
+            commonTasks.forEach(renderTaskItem);
+        };
+
+        const renderGrandmaTasks = (tasks) => {
+            const taskList = document.getElementById('pending-tasks-grandma');
+            const noTasksMessage = document.getElementById('no-tasks-message');
+            taskList.innerHTML = '';
+
+            if (tasks.length === 0) {
+                noTasksMessage.classList.remove('hidden');
+                return;
+            }
+            noTasksMessage.classList.add('hidden');
+
+            tasks.forEach(task => {
+                const taskElement = document.createElement('div');
+                taskElement.className = 'card p-6 flex flex-col md:flex-row items-center justify-between gap-4';
+                
+                const imageHtml = task.imageDataUrl ? `<img src="${task.imageDataUrl}" class="w-24 h-24 object-cover rounded-lg mr-4" alt="Prova da tarefa">` : '';
+                
+                taskElement.innerHTML = `
+                    <div class="flex items-center flex-grow">
+                        ${imageHtml}
+                        <div class="flex flex-col">
+                            <p class="text-xl font-bold">${DAUGHTERS_DATA[task.owner].name} - Tarefa: ${task.description}</p>
+                            <p class="text-sm text-gray-500 mt-2">Prova: [Imagem enviada]</p>
+                        </div>
+                    </div>
+                    <div class="flex flex-col gap-2 w-full md:w-auto justify-end">
+                        <button class="approve-btn button bg-green-500 text-white p-3 text-sm flex-grow md:flex-grow-0" data-task-id="${task.id}" data-owner-id="${task.owner}">Aprovar 👍</button>
+                        <button class="reject-btn button bg-red-500 text-white p-3 text-sm flex-grow md:flex-grow-0" data-task-id="${task.id}" data-owner-id="${task.owner}">Rejeitar 👎</button>
+                        <button class="generate-praise-btn gemini-feature-btn text-sm" data-task-id="${task.id}" data-daughter-name="${DAUGHTERS_DATA[task.owner].name}" data-task-desc="${task.description}">
+                            ✨ Mensagem com IA
+                        </button>
+                    </div>
+                `;
+                taskList.appendChild(taskElement);
+            });
+        };
+
+        // --- Event Listeners ---
+
+        let selectedRoleForLogin = '';
+
+        document.getElementById('login-screen').addEventListener('click', async (e) => {
+            const profile = e.target.closest('[data-profile]');
+            if (!profile) return;
+            const profileId = profile.dataset.profile;
+
+            if (profileId === 'grandma' || profileId === 'parent') {
+                selectedRoleForLogin = profileId;
+                showRoleLogin(profileId);
+            } else {
+                await initializeDaughterData(profileId);
+                showDaughterDashboard(profileId);
+            }
+        });
+
+        document.getElementById('login-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const password = document.getElementById('password-input').value;
+            if (password === PASSWORD_VOVO_PAIS) {
+                if (selectedRoleForLogin === 'grandma') {
+                    showGrandmaDashboard();
+                } else if (selectedRoleForLogin === 'parent') {
+                    showParentDashboard();
+                }
+            } else {
+                showModal("Erro de Senha", "Senha incorreta. Tente novamente.");
+            }
+        });
+
+        document.getElementById('logout-btn').addEventListener('click', showLoginScreen);
+        document.getElementById('grandma-logout-btn').addEventListener('click', showLoginScreen);
+        document.getElementById('parent-logout-btn').addEventListener('click', showLoginScreen);
+
+        document.getElementById('modal-ok-btn').addEventListener('click', hideModal);
+
+        document.getElementById('daughter-dashboard').addEventListener('click', async (e) => {
+            const sendPhotoBtn = e.target.closest('.send-photo-btn');
+            if (sendPhotoBtn) {
+                taskIdToApprove = sendPhotoBtn.dataset.taskId;
+                document.getElementById('photo-upload-input').click();
+            }
+
+            if (e.target.id === 'send-summary-btn') {
+                const summaryData = {
+                    humor: document.getElementById('summary-humor').value,
+                    aula: document.getElementById('summary-aula').value,
+                    briga: document.getElementById('summary-briga').value,
+                    vergonha: document.getElementById('summary-vergonha').value,
+                    ideia: document.getElementById('summary-ideia').value,
+                    palavras: document.getElementById('summary-palavras').value,
+                    timestamp: new Date()
+                };
+                
+                // Simula o envio para o "grupo"
+                console.log(`Resumo do Dia de ${DAUGHTERS_DATA[currentUserId].name}:`, summaryData);
+                showModal("Resumo Enviado", "Seu resumo do dia foi enviado para o grupo. Bom trabalho!");
+            }
+
+            if (e.target.id === 'add-surprise-task-btn') {
+                generateCreativeTask(e.target);
+            }
+        });
+        
+        document.getElementById('photo-upload-input').addEventListener('change', async (e) => {
+            if (!e.target.files[0] || !db || !currentUserId || !taskIdToApprove) {
+                showModal("Erro", "Serviço indisponível ou arquivo não selecionado. Tente novamente mais tarde.");
+                return;
+            }
+            
+            const file = e.target.files[0];
+            const reader = new FileReader();
+
+            reader.onload = async (event) => {
+                const imageDataUrl = event.target.result;
+
+                try {
+                    const daughterDocRef = getDaughterDocRef(currentUserId);
+                    const docSnap = await getDoc(daughterDocRef);
+                    if (docSnap.exists()) {
+                        const tasks = docSnap.data().tasks;
+                        const taskIndex = tasks.findIndex(t => t.id === taskIdToApprove);
+                        if (taskIndex !== -1 && tasks[taskIndex].status === 'pending') {
+                            tasks[taskIndex].status = 'pending_approval';
+                            await updateDoc(daughterDocRef, { tasks });
+                            
+                            // Adiciona a tarefa a uma coleção pública para a vovó ver, com a imagem
+                            const taskDocRef = getTaskDocRef(taskIdToApprove);
+                            await setDoc(taskDocRef, { ...tasks[taskIndex], owner: currentUserId, imageDataUrl });
+                            
+                            showModal("Tarefa Enviada", "Sua tarefa foi enviada para a vovó aprovar. Boa sorte!");
+                        }
+                    }
+                } catch (error) {
+                    console.error("Erro ao enviar tarefa:", error);
+                    showModal("Erro", "Não foi possível enviar a tarefa. Tente novamente.");
+                }
+            };
+
+            reader.readAsDataURL(file);
+        });
+
+        document.getElementById('grandma-dashboard').addEventListener('click', async (e) => {
+            const btn = e.target.closest('.approve-btn, .reject-btn');
+            const praiseBtn = e.target.closest('.generate-praise-btn');
+
+            if (btn) {
+                const taskId = btn.dataset.taskId;
+                const ownerId = btn.dataset.ownerId;
+                const action = btn.classList.contains('approve-btn') ? 'approve' : 'reject';
+                
+                try {
+                    const daughterDocRef = getDaughterDocRef(ownerId);
+                    const docSnap = await getDoc(daughterDocRef);
+                    
+                    if (docSnap.exists()) {
+                        const daughterData = docSnap.data();
+                        const taskIndex = daughterData.tasks.findIndex(t => t.id === taskId);
+                        
+                        if (taskIndex !== -1) {
+                            let newStatus = '';
+                            let historyEntry = {};
+                            const taskDetails = daughterData.tasks[taskIndex];
+
+                            if (action === 'approve') {
+                                newStatus = 'completed';
+                                const newBalance = daughterData.balance + taskDetails.value;
+                                historyEntry = {
+                                    timestamp: new Date().toISOString(),
+                                    taskId: taskId,
+                                    description: taskDetails.description,
+                                    result: 'Aprovada',
+                                    value: taskDetails.value
+                                };
+                                await updateDoc(daughterDocRef, { 
+                                    balance: newBalance, 
+                                    [`tasks.${taskIndex}.status`]: newStatus,
+                                    history: arrayUnion(historyEntry)
+                                });
+                                showModal("Aprovado!", `Parabéns, ${DAUGHTERS_DATA[ownerId].name}! Sua tarefa foi aprovada e você ganhou R$ ${taskDetails.value.toFixed(2).replace('.', ',')}.`);
+                            } else {
+                                newStatus = 'rejected';
+                                const newBalance = daughterData.balance - 2 * taskDetails.value;
+                                historyEntry = {
+                                    timestamp: new Date().toISOString(),
+                                    taskId: taskId,
+                                    description: taskDetails.description,
+                                    result: 'Rejeitada',
+                                    penalty: 2 * taskDetails.value
+                                };
+                                await updateDoc(daughterDocRef, {
+                                    balance: newBalance > 0 ? newBalance : 0,
+                                    [`tasks.${taskIndex}.status`]: newStatus,
+                                    history: arrayUnion(historyEntry)
+                                });
+                                showModal("Rejeitado", `A tarefa de ${DAUGHTERS_DATA[ownerId].name} foi rejeitada. -2 pontos.`);
+                            }
+                            
+                            await deleteDoc(getTaskDocRef(taskId));
+                        }
+                    }
+                } catch (error) {
+                    console.error("Erro ao aprovar/rejeitar tarefa:", error);
+                    showModal("Erro", "Não foi possível realizar a ação.");
+                }
+            } else if (praiseBtn) {
+                const daughterName = praiseBtn.dataset.daughterName;
+                const taskDesc = praiseBtn.dataset.taskDesc;
+                generateMotivationalMessage(daughterName, taskDesc, praiseBtn);
+            }
+        });
+
+        // Inicia a aplicação
+        initFirebase();
+    </script>
+</body>
+</html>
