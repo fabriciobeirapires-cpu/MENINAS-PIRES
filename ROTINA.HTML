@@ -266,8 +266,13 @@
         let currentUserRole = ''; // 'daughter', 'grandma', 'parent'
         let currentUserId = ''; // 'isadora', 'sofia', 'antonella', etc.
         let taskIdToApprove = null;
-        const API_KEY = "";
-        const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${API_KEY}`;
+        const rawGeminiKey = typeof __gemini_api_key !== 'undefined' ? __gemini_api_key : '';
+        const API_KEY = String(rawGeminiKey).trim();
+        const isGeminiConfigured = API_KEY.length > 0;
+        const API_URL = isGeminiConfigured
+            ? `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${API_KEY}`
+            : '';
+        const GEMINI_UNAVAILABLE_MESSAGE = 'Configure a chave da API do Gemini para liberar as funcionalidades de IA.';
         const PASSWORD_VOVO_PAIS = "1234"; // Senha simples para acesso. AVISO: Apenas para demonstração. Não usar em produção.
 
 
@@ -403,9 +408,68 @@
         const hideModal = () => {
             document.getElementById('modal-container').classList.add('hidden');
         };
-        
+
+        const ensureGeminiConfigured = (button, idleLabel) => {
+            if (isGeminiConfigured && API_URL) {
+                return true;
+            }
+
+            showModal('IA indisponível', GEMINI_UNAVAILABLE_MESSAGE);
+
+            if (button) {
+                button.disabled = true;
+                if (idleLabel) {
+                    button.textContent = idleLabel;
+                }
+                setTimeout(() => {
+                    button.disabled = false;
+                }, 0);
+            }
+
+            return false;
+        };
+
+        const parseGeminiJson = async (response) => {
+            const rawText = await response.text();
+            if (!rawText) {
+                return {};
+            }
+
+            try {
+                return JSON.parse(rawText);
+            } catch (error) {
+                throw new Error('Erro ao interpretar a resposta da IA.');
+            }
+        };
+
+        const applyGeminiAvailability = () => {
+            const surpriseButton = document.getElementById('add-surprise-task-btn');
+            if (!surpriseButton) {
+                return;
+            }
+
+            const disabled = !isGeminiConfigured || !API_URL;
+            surpriseButton.disabled = disabled;
+            surpriseButton.classList.toggle('opacity-60', disabled);
+            surpriseButton.classList.toggle('cursor-not-allowed', disabled);
+
+            if (disabled) {
+                surpriseButton.setAttribute('aria-disabled', 'true');
+                surpriseButton.setAttribute('title', GEMINI_UNAVAILABLE_MESSAGE);
+                console.warn('Gemini API key não configurada. Recursos de IA desativados.');
+            } else {
+                surpriseButton.removeAttribute('aria-disabled');
+                surpriseButton.removeAttribute('title');
+            }
+        };
+
         // Função para gerar mensagem de elogio com IA
         const generateMotivationalMessage = async (daughterName, taskDescription, button) => {
+            const idleLabel = "✨ Mensagem com IA";
+            if (!ensureGeminiConfigured(button, idleLabel)) {
+                return;
+            }
+
             button.textContent = "Gerando...";
             button.disabled = true;
 
@@ -424,9 +488,13 @@
                     body: JSON.stringify(payload)
                 });
 
-                const result = await response.json();
-                const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
-                
+                const result = await parseGeminiJson(response);
+                if (!response.ok) {
+                    const errorMessage = result.error?.message || 'Não foi possível gerar a mensagem.';
+                    throw new Error(errorMessage);
+                }
+                const text = result.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+
                 if (text) {
                     showModal("Mensagem Sugerida", text);
                 } else {
@@ -434,15 +502,20 @@
                 }
             } catch (error) {
                 console.error("Erro ao chamar a API Gemini:", error);
-                showModal("Erro", "Não foi possível gerar a mensagem. Tente novamente mais tarde.");
+                showModal("Erro", error?.message || "Não foi possível gerar a mensagem. Tente novamente mais tarde.");
             } finally {
-                button.textContent = "✨ Mensagem com IA";
+                button.textContent = idleLabel;
                 button.disabled = false;
             }
         };
 
         // Função para gerar uma tarefa surpresa com IA
         const generateCreativeTask = async (button) => {
+            const idleLabel = "✨ Tarefa Surpresa";
+            if (!ensureGeminiConfigured(button, idleLabel)) {
+                return;
+            }
+
             button.textContent = "Gerando...";
             button.disabled = true;
 
@@ -469,10 +542,19 @@
                     body: JSON.stringify(payload)
                 });
                 
-                const result = await response.json();
+                const result = await parseGeminiJson(response);
+                if (!response.ok) {
+                    const errorMessage = result.error?.message || 'Não foi possível gerar a tarefa.';
+                    throw new Error(errorMessage);
+                }
                 const jsonText = result.candidates?.[0]?.content?.parts?.[0]?.text;
                 if (jsonText) {
-                    const newTaskData = JSON.parse(jsonText);
+                    let newTaskData;
+                    try {
+                        newTaskData = JSON.parse(jsonText);
+                    } catch (parseError) {
+                        throw new Error('Resposta da IA em formato inválido.');
+                    }
                     const task = {
                         id: `surprise-${Date.now()}`,
                         description: newTaskData.description,
@@ -495,9 +577,9 @@
                 }
             } catch (error) {
                 console.error("Erro ao chamar a API Gemini:", error);
-                showModal("Erro", "Não foi possível gerar a tarefa. Tente novamente mais tarde.");
+                showModal("Erro", error?.message || "Não foi possível gerar a tarefa. Tente novamente mais tarde.");
             } finally {
-                button.textContent = "✨ Tarefa Surpresa";
+                button.textContent = idleLabel;
                 button.disabled = false;
             }
         };
@@ -697,12 +779,17 @@
             }
             noTasksMessage.classList.add('hidden');
 
+            const geminiDisabled = !isGeminiConfigured || !API_URL;
+            const geminiDisabledAttr = geminiDisabled ? ' disabled aria-disabled="true"' : '';
+            const geminiDisabledClasses = geminiDisabled ? ' opacity-60 cursor-not-allowed' : '';
+            const geminiTitleAttr = geminiDisabled ? ` title="${GEMINI_UNAVAILABLE_MESSAGE}"` : '';
+
             tasks.forEach(task => {
                 const taskElement = document.createElement('div');
                 taskElement.className = 'card p-6 flex flex-col md:flex-row items-center justify-between gap-4';
-                
+
                 const imageHtml = task.imageDataUrl ? `<img src="${task.imageDataUrl}" class="w-24 h-24 object-cover rounded-lg mr-4" alt="Prova da tarefa">` : '';
-                
+
                 taskElement.innerHTML = `
                     <div class="flex items-center flex-grow">
                         ${imageHtml}
@@ -714,7 +801,7 @@
                     <div class="flex flex-col gap-2 w-full md:w-auto justify-end">
                         <button class="approve-btn button bg-green-500 text-white p-3 text-sm flex-grow md:flex-grow-0" data-task-id="${task.id}" data-owner-id="${task.owner}">Aprovar 👍</button>
                         <button class="reject-btn button bg-red-500 text-white p-3 text-sm flex-grow md:flex-grow-0" data-task-id="${task.id}" data-owner-id="${task.owner}">Rejeitar 👎</button>
-                        <button class="generate-praise-btn gemini-feature-btn text-sm" data-task-id="${task.id}" data-daughter-name="${DAUGHTERS_DATA[task.owner].name}" data-task-desc="${task.description}">
+                        <button class="generate-praise-btn gemini-feature-btn text-sm${geminiDisabledClasses}"${geminiDisabledAttr}${geminiTitleAttr} data-task-id="${task.id}" data-daughter-name="${DAUGHTERS_DATA[task.owner].name}" data-task-desc="${task.description}">
                             ✨ Mensagem com IA
                         </button>
                     </div>
@@ -726,6 +813,8 @@
         // --- Event Listeners ---
 
         let selectedRoleForLogin = '';
+
+        applyGeminiAvailability();
 
         document.getElementById('login-screen').addEventListener('click', async (e) => {
             const profile = e.target.closest('[data-profile]');
